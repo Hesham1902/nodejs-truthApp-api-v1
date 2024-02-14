@@ -90,7 +90,7 @@ This project uses `MongoDB` as database and `NodeJS` , install them in your loca
 Clone the project
 
 ```bash
-  git clone https://github.com/yahya-saad/Truth-Backend.git
+  git clone https://github.com/Hesham1902/nodejs-truthApp-api-v1.git
 ```
 
 Go to the project directory
