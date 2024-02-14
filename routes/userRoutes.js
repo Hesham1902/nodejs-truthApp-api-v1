@@ -8,6 +8,7 @@ const {
   updateProfilePic,
   generateQrCode,
   changePassword,
+  deleteProfilePic,
 } = require("../services/userServices");
 
 const {
@@ -20,6 +21,7 @@ router.use(authService.isAuth, authService.allowedTo("user"));
 
 router.get("/getLoggedUser", getLoggedUser);
 router.put("/uploadProfilePic", uploadProfilePic(), updateProfilePic);
+router.delete("/deleteProfilePic", deleteProfilePic);
 router.get("/generateQrCode", generateQrCode);
 router.put("/changePassword", changePasswordValidation, changePassword);
 // router.delete("/deleteUser/:userId", deleteUserById);

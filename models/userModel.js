@@ -19,9 +19,16 @@ const userSchema = new mongoose.Schema(
       required: [true, "you must enter a password"],
     },
     profilePic: {
-      type: String,
-      default: process.env.DEFAULT_PROFILE_PIC,
+      secure_url: {
+        type: String,
+        default: process.env.DEFAULT_PROFILE_PIC,
+      },
+      public_id: {
+        type: String,
+        default: null,
+      },
     },
+
     gender: {
       type: String,
       enum: ["male", "female"],
@@ -40,20 +47,20 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setImageURL = (doc) => {
-  if (doc.profilePic) {
-    const profilePic = `${process.env.BASE_URL}/users/${doc.profilePic}`;
-    doc.profilePic = profilePic;
-  }
-};
+// const setImageURL = (doc) => {
+//   if (doc.profilePic) {
+//     const profilePic = `${process.env.BASE_URL}/users/${doc.profilePic}`;
+//     doc.profilePic = profilePic;
+//   }
+// };
 
-userSchema.post("init", (doc) => {
-  setImageURL(doc);
-});
+// userSchema.post("init", (doc) => {
+//   setImageURL(doc);
+// });
 
-userSchema.post("save", (doc) => {
-  setImageURL(doc);
-});
+// userSchema.post("save", (doc) => {
+//   setImageURL(doc);
+// });
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();

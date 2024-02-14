@@ -3,6 +3,7 @@ const Qrcode = require("qrcode");
 
 const User = require("../models/userModel");
 const ApiError = require("../utils/apiError");
+const cloudinary = require("../utils/cloudinary");
 
 exports.getLoggedUser = asyncHandler(async (req, res, next) => {
   const loggedUser = await User.findById(req.user._id);
@@ -15,11 +16,44 @@ exports.getLoggedUser = asyncHandler(async (req, res, next) => {
 });
 
 exports.updateProfilePic = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user._id);
-  user.profilePic = req.file.filename;
-  await user.save();
+  if (!req.file) {
+    return next(new ApiError("Profile picture is required", 400));
+  }
+  const results = await cloudinary.uploader.upload(req.file.path, {
+    folder: `Truth/${req.user._id}/profile-pictrue`,
+  });
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      "profilePic.public_id": results.public_id,
+      "profilePic.secure_url": results.secure_url,
+    },
+    { new: true }
+  );
   delete user._doc.password;
   return res.status(200).json({ message: "Profile picture uploaded", user });
+});
+
+exports.deleteProfilePic = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  
+  if (!user.profilePic || user.profilePic.public_id == null) {
+    return next(new ApiError("There is no profile picture to delete", 400));
+  }
+  await cloudinary.uploader.destroy(user.profilePic.public_id);
+
+  user.profilePic = {
+    secure_url: process.env.DEFAULT_PROFILE_PIC,
+    public_id: null,
+  };
+
+  await user.save();
+  return res.status(200).json({
+    status: "sucess",
+    message: "Profile picture deleted successfully",
+    user,
+  });
 });
 
 exports.changePassword = asyncHandler(async (req, res, next) => {
