@@ -18,7 +18,7 @@ const JsonWebTokenErrorHandler = () =>
   new ApiError("Invalid token, please login again..", 401);
 
 const TokenExpiredErrorHandler = () =>
-  new ApiError("Token Expired, please login again..", 401);
+  new ApiError("Token Expired, please get new token..", 401);
 
 const globalError = (err, req, res, next) => {
   console.log("iam in express error handler");

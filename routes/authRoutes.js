@@ -20,7 +20,7 @@ const {
 
 router.post("/signup", uploadProfilePic(), signupValidator, signup);
 router.post("/login", loginValidator, login);
-router.post("/verifyEmail/:verifyToken", verifyEmail);
+router.get("/verifyEmail/:verifyToken", verifyEmail);
 router.post("/forgotPassword", forgetPassword);
 router.put("/resetPassword", resetPasswordValidator, resetPassword);
 

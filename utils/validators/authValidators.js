@@ -31,7 +31,16 @@ exports.signupValidator = [
     .notEmpty()
     .withMessage("password required")
     .isLength({ min: 6 })
-    .withMessage("Too short password"),
+    .withMessage("Too short password")
+    .custom((password, { req }) => {
+      if (password !== req.body.confirmPassword) {
+        throw new Error("incorrect confirm new password");
+      }
+      return true;
+    }),
+  check("confirmPassword")
+    .notEmpty()
+    .withMessage("confirm new password required"),
   validatorMiddleware,
 ];
 
@@ -51,7 +60,16 @@ exports.resetPasswordValidator = [
     .notEmpty()
     .withMessage("password required")
     .isLength({ min: 6 })
-    .withMessage("Too short password"),
-
+    .withMessage("Too short password")
+    .custom((password, { req }) => {
+      if (password !== req.body.confirmPassword) {
+        throw new Error("incorrect confirm new password");
+      }
+      return true;
+    }),
+  check("confirmPassword")
+    .notEmpty()
+    .withMessage("confirm new password required"),
+  check("resetCode").notEmpty().withMessage("Reset code required"),
   validatorMiddleware,
 ];

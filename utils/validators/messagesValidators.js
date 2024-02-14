@@ -43,6 +43,10 @@ exports.getMsgValidation = [
     .withMessage(`Invalid message id format`)
     .custom(async (val, { req }) => {
       const message = await Message.findById(val);
+      console.log(message)
+      if (!message) {
+        throw new ApiError("No message found");
+      }
       if (message.recipient.userName !== req.user.userName) {
         throw new ApiError(
           `No messages found for ${req.user.userName} with this id`,
@@ -65,4 +69,3 @@ exports.deleteMsgValidation = [
     }),
   validatorMiddleware,
 ];
-

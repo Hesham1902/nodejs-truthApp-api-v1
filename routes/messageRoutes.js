@@ -31,7 +31,7 @@ router.post("/Auth/sendMsg/:recieverId", sendMsgAuthValidation, sendMsgAuth);
 router.get("/getMessage/:id", getMsgValidation, getMessageById);
 // get all your recieved messages
 router.get("/getMessages", getRecievedMessages);
-// get all your sentmessages
+// get all your sent messages
 router.get("/getSentMsgs", getSentMsgs);
 //get all your favourited messages
 router.get("/favMsgs", getAllFavMsgs);

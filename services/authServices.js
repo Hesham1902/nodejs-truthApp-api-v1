@@ -22,12 +22,14 @@ exports.signup = asyncHandler(async (req, res, next) => {
     userName: req.body.username,
     email: req.body.email,
     password: req.body.password,
-    profilePic: req.file ? req.file.filename : undefined,
+    "profilePic.secure_url": req.file
+      ? req.file.filename
+      : process.env.DEFAULT_PROFILE_PIC,
     gender: req.body.gender,
     isConfirmed: false,
   });
   const verifyToken = await createToken(user.email, "10m");
-  const verifyLink = `${req.protocol}://${req.headers.host}/api/v1/verifyEmail/${verifyToken}`;
+  const verifyLink = `${req.protocol}://${req.headers.host}/api/v1/auth/verifyEmail/${verifyToken}`;
 
   try {
     await sendEmail({
@@ -57,7 +59,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 exports.verifyEmail = asyncHandler(async (req, res, next) => {
   const { verifyToken } = req.params;
   const decoded = jwt.verify(verifyToken, process.env.JWT_SECRET_KEY);
-
+  console.log(decoded);
   const user = await User.findOne({ email: decoded.payload });
   if (!user) {
     throw new ApiError("User not found", 404);
@@ -113,9 +115,13 @@ exports.isAuth = asyncHandler(async (req, res, next) => {
 
 exports.forgetPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
-  const user = await User.findOneAndUpdate({ email });
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ApiError("Email not exist", 404);
+  }
+  const isThere = await Token.findOne({ userId: user._id });
+  if (isThere) {
+    return next(new ApiError("You have sent one already.", 400));
   }
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   await sendEmail({
@@ -138,11 +144,12 @@ exports.forgetPassword = asyncHandler(async (req, res, next) => {
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   const { resetCode, newPassword } = req.body;
   const hashedCode = createHash(resetCode);
-
+  
   const token = await Token.findOne({
     code: hashedCode,
     expireAt: { $gt: Date.now() },
   });
+  console.log(token);
   if (!token) {
     throw new ApiError("Invalid or expired code", 404);
   }
