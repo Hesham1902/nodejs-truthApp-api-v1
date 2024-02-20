@@ -10,8 +10,8 @@ const messageSchema = new mongoose.Schema({
     ref: "User",
   },
   recipient: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
+    type: String,
+    required: true,
   },
   isFavourite: {
     type: Boolean,
@@ -20,7 +20,7 @@ const messageSchema = new mongoose.Schema({
 });
 
 messageSchema.pre(/^find/, function (next) {
-  this.populate({ path: "sender recipient", select: "userName -_id" });
+  this.populate({ path: "sender", select: "userName -_id" });
   next();
 });
 

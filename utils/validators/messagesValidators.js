@@ -1,5 +1,4 @@
 const { check } = require("express-validator");
-const bcrypt = require("bcryptjs");
 
 const validatorMiddleware = require("../../Middlewares/validatorMiddleware");
 const ApiError = require("../apiError");
@@ -7,13 +6,11 @@ const User = require("../../models/userModel");
 const Message = require("../../models/messageModel");
 
 exports.sendMsgValidation = [
-  check("recieverId")
+  check("reciever")
     .notEmpty()
-    .withMessage("Recipient username required!")
-    .isMongoId()
-    .withMessage("Invalid user id format ")
+    .withMessage("Must provide recipient username to sent message!")
     .custom(async (val, { req }) => {
-      const user = await User.findById(val);
+      const user = await User.findOne({ userName: val });
       if (!user) {
         throw new ApiError(`This username: "${val}" not exist`, 404);
       }
@@ -22,11 +19,11 @@ exports.sendMsgValidation = [
 ];
 
 exports.sendMsgAuthValidation = [
-  check("recieverId")
+  check("reciever")
     .notEmpty()
     .withMessage("Must provide recipient username to sent message!")
     .custom(async (val, { req }) => {
-      const user = await User.findById(val);
+      const user = await User.findOne({ userName: val });
       if (!user) {
         throw new ApiError(`This username: "${val}" not exist`, 404);
       }
@@ -43,11 +40,15 @@ exports.getMsgValidation = [
     .withMessage(`Invalid message id format`)
     .custom(async (val, { req }) => {
       const message = await Message.findById(val);
-      console.log(message)
+      console.log(message);
       if (!message) {
         throw new ApiError("No message found");
       }
-      if (message.recipient.userName !== req.user.userName) {
+      console.log(req.user._id, message.sender);
+      if (
+        message.recipient !== req.user.userName &&
+        message.sender.userName !== req.user.userName
+      ) {
         throw new ApiError(
           `No messages found for ${req.user.userName} with this id`,
           404

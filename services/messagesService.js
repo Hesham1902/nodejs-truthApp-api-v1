@@ -4,36 +4,32 @@ const Message = require("../models/messageModel");
 const ApiError = require("../utils/apiError");
 const ApiFeatures = require("../utils/apiFeatures");
 
-
 exports.sendMsgAnon = asyncHandler(async (req, res, next) => {
-  const { recieverId } = req.params;
-
-  const { content } = req.body;
+  const { content, reciever } = req.body;
   //Send Anonymous Message
   const message = await Message.create({
     content,
-    recipient: recieverId,
+    recipient: reciever,
   });
   return res.status(200).json({ status: "Message Sent Successfully", message });
 });
 
 exports.sendMsgAuth = asyncHandler(async (req, res, next) => {
-  const { content } = req.body;
-  const { recieverId } = req.params;
-
+  const { content, reciever } = req.body;
   if (!req.user) {
     throw new ApiError("You must be logged in to send a message");
   }
   const message = await Message.create({
     content,
     sender: req.user._id,
-    recipient: recieverId,
+    recipient: reciever,
   });
   return res.status(200).json({ status: "Message Sent Successfully", message });
 });
 
 exports.getMessageById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
+  console.log("Crazy ????????");
   const message = await Message.findById(id);
   if (!message) {
     throw new ApiError("Message not found", 404);
@@ -44,7 +40,7 @@ exports.getMessageById = asyncHandler(async (req, res, next) => {
 exports.getRecievedMessages = asyncHandler(async (req, res, next) => {
   //build query
   const apiFeatures = new ApiFeatures(
-    Message.find({ recipient: req.user._id }),
+    Message.find({ recipient: req.user.userName }),
     req.query
   )
     .sort()
@@ -54,7 +50,7 @@ exports.getRecievedMessages = asyncHandler(async (req, res, next) => {
   //get the final messages count
   const { filteredQuery } = apiFeatures;
   const messagesCount = await Message.countDocuments({
-    $and: [{ recipient: req.user._id }, { filteredQuery }],
+    $and: [{ recipient: req.user.userName }, { filteredQuery }],
   });
 
   //execute pagination
@@ -97,6 +93,7 @@ exports.getSentMsgs = asyncHandler(async (req, res, next) => {
   const { mongooseQuery, paginationResult } = paginatedApiFeatures;
 
   const messages = await mongooseQuery;
+  console.log(messages);
   if (!messages) {
     throw new ApiError(
       `There is no messages sent by this user ${req.user.userName}`,
@@ -128,7 +125,7 @@ exports.toggleFav = asyncHandler(async (req, res, next) => {
   if (!message) {
     throw new ApiError("Message not found", 404);
   }
-  if (message.recipient.userName !== req.user.userName) {
+  if (message.recipient !== req.user.userName) {
     throw new ApiError("Not authorized to toggle this message", 403);
   }
   message.isFavourite = !message.isFavourite;
@@ -150,4 +147,19 @@ exports.getAllFavMsgs = asyncHandler(async (req, res, next) => {
     );
   }
   return res.status(200).json({ status: "Successful", "Liked Messages": msgs });
+});
+
+exports.getAllMsgs = asyncHandler(async (req, res, next) => {
+  const messages = await Message.find();
+  if (!messages) {
+    throw new ApiError(
+      `There is no messages sent by this user ${req.user.userName}`,
+      404
+    );
+  }
+  return res.status(200).json({
+    status: "Successful",
+    result: messages.length,
+    messages,
+  });
 });

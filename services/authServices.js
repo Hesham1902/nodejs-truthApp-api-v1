@@ -52,7 +52,7 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ApiError("Wrong email or password"));
   }
 
-  const token = await createToken(user._id, "1hr");
+  const token = await createToken(user._id, res, "1hr");
   return res.status(200).json({ status: "Success", user, token });
 });
 
@@ -74,43 +74,6 @@ exports.verifyEmail = asyncHandler(async (req, res, next) => {
   return res
     .status(200)
     .json({ status: "Success", message: "Email verified successfully" });
-});
-
-exports.isAuth = asyncHandler(async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-  if (!token) {
-    throw new ApiError("You must login to get access to this route", 401);
-  }
-  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-  const loggedUser = await User.findById(decoded.payload);
-  if (!loggedUser) {
-    throw new ApiError("User not found", 404);
-  }
-  // Check if the password changed after token generation
-  if (loggedUser.passwordChangedAt) {
-    const passwordChangedAtTimeStamp = parseInt(
-      loggedUser.passwordChangedAt.getTime() / 1000,
-      10
-    );
-    if (passwordChangedAtTimeStamp > decoded.iat) {
-      throw new ApiError(
-        "User Recently changed his password, please login again..",
-        401
-      );
-    }
-  }
-  // check if the user not verified
-  if (!loggedUser.isConfirmed) {
-    throw new ApiError("Check you mail and verify your account", 401);
-  }
-  req.user = loggedUser;
-  next();
 });
 
 exports.forgetPassword = asyncHandler(async (req, res, next) => {
@@ -144,7 +107,7 @@ exports.forgetPassword = asyncHandler(async (req, res, next) => {
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   const { resetCode, newPassword } = req.body;
   const hashedCode = createHash(resetCode);
-  
+
   const token = await Token.findOne({
     code: hashedCode,
     expireAt: { $gt: Date.now() },
@@ -174,3 +137,5 @@ exports.allowedTo = (...roles) =>
     }
     next();
   });
+
+exports.logout = asyncHandler(async (req, res, next) => {});

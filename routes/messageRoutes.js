@@ -11,6 +11,7 @@ const {
   toggleFav,
   getAllFavMsgs,
   getSentMsgs,
+  getAllMsgs,
 } = require("../services/messagesService");
 const {
   sendMsgValidation,
@@ -19,14 +20,19 @@ const {
   deleteMsgValidation,
 } = require("../utils/validators/messagesValidators");
 const authService = require("../services/authServices");
+const isAuth = require("../Middlewares/isAuth");
 
 //Anyone cans end anonymous message
-router.post("/anonymous/sendMsg/:recieverId", sendMsgValidation, sendMsgAnon);
+router.post("/anonymous/sendMsg", sendMsgValidation, sendMsgAnon);
+
+//for testing purposes
+// router.get("/getAllMsgs", getAllMsgs);
+// router.get("/getMessage/:id", getMessageById);
 
 // Authenticated routes
-router.use(authService.isAuth);
+router.use(isAuth,authService.allowedTo('user'));
 // send message from user to user
-router.post("/Auth/sendMsg/:recieverId", sendMsgAuthValidation, sendMsgAuth);
+router.post("/Auth/sendMsg", sendMsgAuthValidation, sendMsgAuth);
 // get message by id must be yours
 router.get("/getMessage/:id", getMsgValidation, getMessageById);
 // get all your recieved messages
